@@ -13,6 +13,55 @@ import logging
 logger = logging.getLogger(__name__)
 
 # Create authentication related views
+def logout_request(request):
+    print("Log out the user `{}`".format(request.user.username))
+    logout(request)
+    return redirect('onlinecourse:popular_course_list')
+
+
+def login_request(request):
+    context = {}
+    # Handles POST request
+    if request.method == "POST":
+        # Get username and password from request.POST dictionary
+        username = request.POST['username']
+        password = request.POST['psw']
+        # Try to check if provide credential can be authenticated
+        user = authenticate(username=username, password=password)
+        if user is not None:
+            # If user is valid, call login method to login current user
+            login(request, user)
+            return redirect('onlinecourse:popular_course_list')
+        else:
+            # If not, return to login page again
+            return render(request, 'onlinecourse/user_login.html', context)
+    else:
+        return render(request, 'onlinecourse/user_login.html', context)
+
+
+def registration_request(request):
+    context = {}
+    if request.method == 'GET':
+        return render(request, 'onlinecourse/user_registration.html', context)
+    elif request.method == 'POST':
+        user_exist = False
+        try:
+            username = request.POST['username']
+            password = request.POST['psw']
+            first_name = request.POST['firstname']
+            last_name = request.POST['lastname']
+            User.objects.get(username=username)
+            user_exist = True
+        except:
+            logger.debug("{} is new user".format(username))
+        if not user_exist:
+            user = User.objects.create_user(username=username,
+                                            password=password,
+                                            first_name=first_name, last_name=last_name)
+            login(request, user)
+            return redirect('onlinecourse:popular_course_list')
+        else:
+            return render(request, 'onlinecourse/user_registration.html', context)
 
 
 
